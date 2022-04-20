@@ -49,7 +49,11 @@ def crawl(directory):
 
 def populate_probabilities(page, page_probabilities, damping_factor, pages_linked_to_by_current_page, corpus):
 
-    prob_of_visiting_link_on_page = float(damping_factor) / len(pages_linked_to_by_current_page)
+    if len(pages_linked_to_by_current_page) == 0:  # if there are no outgoing links, we don't want to divide by 0
+        prob_of_visiting_link_on_page = 0
+    else: 
+        prob_of_visiting_link_on_page = float(damping_factor) / len(pages_linked_to_by_current_page)
+
     prob_of_visting_link_not_on_page = float(1 - damping_factor) / (len(corpus.keys()) - 1)   # -1 bc we don't count the page we are currently on
     
     for k, v in page_probabilities:
@@ -91,15 +95,29 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    # start w a random page and take n steps
 
     times_each_page_visited_on_random_walk = corpus
     for k, v in times_each_page_visited_on_random_walk:
-        times_each_page_visited_on_random_walk = 0
+        times_each_page_visited_on_random_walk[k] = 0
     
-    # take n random steps
+    # start w a random page and take n random steps
+    random_page_index = int(random.random() * len(corpus.keys()))
+    starting_page = corpus.keys()[random_page_index]
+    times_each_page_visited_on_random_walk[starting_page] += 1
 
 
+    current_page = starting_page
+    for i in range(1, n):   # start at 1 (not 0) bc we already took the first step
+        trans_model = transition_model(corpus, current_page, damping_factor)
+        # TODO need to choose next page based on the probabilities in trans_model and update current_page accordingly
+        current_page = random.choices(trans_model.keys(), weights = trans_model.values(), k=1)    #make sure keys() and values() are properly ordered
+        times_each_page_visited_on_random_walk[current_page] += 1
+
+    # to compute pagerank need to divide each value in times_each_page_visited_on_random_walk by n
+    pageranks = times_each_page_visited_on_random_walk
+    for k, v in pageranks:
+        pageranks[k] = float(pageranks[k]) / n
+    return pageranks
 
 def iterate_pagerank(corpus, damping_factor):
     """
