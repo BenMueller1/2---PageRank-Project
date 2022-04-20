@@ -47,16 +47,19 @@ def crawl(directory):
 
     return pages
 
-def populate_probabilities(page_probabilities, damping_factor, pages_linked_to_by_current_page):
+def populate_probabilities(page, page_probabilities, damping_factor, pages_linked_to_by_current_page, corpus):
 
     prob_of_visiting_link_on_page = float(damping_factor) / len(pages_linked_to_by_current_page)
-    prob_of_visting_link_not_on_page = float(1 - damping_factor) / len(pages_linked_to_by_current_page)
+    prob_of_visting_link_not_on_page = float(1 - damping_factor) / (len(corpus.keys()) - 1)   # -1 bc we don't count the page we are currently on
     
     for k, v in page_probabilities:
         if k in pages_linked_to_by_current_page:
-            page_probabilities[k] = prob_of_visiting_link_on_page
+            page_probabilities[k] = prob_of_visiting_link_on_page + prob_of_visting_link_not_on_page
         else:
             page_probabilities[k] = prob_of_visting_link_not_on_page
+    
+    del page_probabilities[page] # we don't want to travel back to current page
+
     return page_probabilities
 
 
@@ -75,7 +78,7 @@ def transition_model(corpus, page, damping_factor):
         page_probabilities[k] = 0
     pages_linked_to_by_current_page = corpus[page]
 
-    page_probabilities = populate_probabilities(page_probabilities, damping_factor, pages_linked_to_by_current_page)
+    page_probabilities = populate_probabilities(page, page_probabilities, damping_factor, pages_linked_to_by_current_page, corpus)
     return page_probabilities
 
 
@@ -88,7 +91,14 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    # start w a random page and take n steps
+
+    times_each_page_visited_on_random_walk = corpus
+    for k, v in times_each_page_visited_on_random_walk:
+        times_each_page_visited_on_random_walk = 0
+    
+    # take n random steps
+
 
 
 def iterate_pagerank(corpus, damping_factor):
