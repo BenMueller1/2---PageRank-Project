@@ -47,6 +47,18 @@ def crawl(directory):
 
     return pages
 
+def populate_probabilities(page_probabilities, damping_factor, pages_linked_to_by_current_page):
+
+    prob_of_visiting_link_on_page = float(damping_factor) / len(pages_linked_to_by_current_page)
+    prob_of_visting_link_not_on_page = float(1 - damping_factor) / len(pages_linked_to_by_current_page)
+    
+    for k, v in page_probabilities:
+        if k in pages_linked_to_by_current_page:
+            page_probabilities[k] = prob_of_visiting_link_on_page
+        else:
+            page_probabilities[k] = prob_of_visting_link_not_on_page
+    return page_probabilities
+
 
 def transition_model(corpus, page, damping_factor):
     """
@@ -57,7 +69,14 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-    raise NotImplementedError
+
+    page_probabilities = corpus
+    for k, v in page_probabilities:
+        page_probabilities[k] = 0
+    pages_linked_to_by_current_page = corpus[page]
+
+    page_probabilities = populate_probabilities(page_probabilities, damping_factor, pages_linked_to_by_current_page)
+    return page_probabilities
 
 
 def sample_pagerank(corpus, damping_factor, n):
